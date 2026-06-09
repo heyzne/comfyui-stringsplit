@@ -1,6 +1,8 @@
 import re
 
 class StringSplitNode:
+    OUTPUT_PORT_COUNT = 10
+
     @classmethod
     def INPUT_TYPES(cls):
         return {
@@ -8,17 +10,15 @@ class StringSplitNode:
                 "input_string": ("STRING", {"multiline": True, "dynamicPrompts": False}),
                 "split_method": (["空行分割", "符号分割"],),
                 "split_symbol": ("STRING", {"default": ",", "placeholder": "输入分割符号"}),
-                "output_count": ("INT", {"default": 1, "min": 1, "max": 50, "step": 1}),
+                "output_count": ("INT", {"default": 1, "min": 1, "max": cls.OUTPUT_PORT_COUNT, "step": 1}),
             },
         }
 
-    RETURN_TYPES = ("STRING",)
-    RETURN_NAMES = ("STRING",)
+    RETURN_TYPES = tuple(["STRING"] * OUTPUT_PORT_COUNT)
+    RETURN_NAMES = tuple([f"OUT_{i+1}" for i in range(OUTPUT_PORT_COUNT)])
     FUNCTION = "split_string"
     CATEGORY = "utils"
     DESCRIPTION = "按空行或自定义符号分割字符串"
-    OUTPUT_NODE = True
-    OUTPUT_IS_LIST = (True,)
 
     def split_string(self, input_string, split_method, split_symbol, output_count):
         parts = []
@@ -31,13 +31,15 @@ class StringSplitNode:
             parts = [p.strip() for p in parts if p.strip()]
         
         result = []
-        for i in range(output_count):
-            if i < len(parts):
+        for i in range(self.OUTPUT_PORT_COUNT):
+            if i < output_count and i < len(parts):
                 result.append(parts[i])
+            elif i < output_count:
+                result.append("")
             else:
                 result.append("")
         
-        return (result,)
+        return tuple(result)
 
     @classmethod
     def IS_CHANGED(cls, input_string, split_method, split_symbol, output_count):
