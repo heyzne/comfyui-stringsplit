@@ -15,10 +15,12 @@ class StringSplitNode:
         }
 
     RETURN_TYPES = tuple(["STRING"] * OUTPUT_PORT_COUNT)
-    RETURN_NAMES = tuple([f"OUT_{i+1}" for i in range(OUTPUT_PORT_COUNT)])
+    RETURN_NAMES = tuple([f"字符串_{i+1}" for i in range(OUTPUT_PORT_COUNT)])
     FUNCTION = "split_string"
     CATEGORY = "utils"
     DESCRIPTION = "按空行或自定义符号分割字符串"
+
+    OUTPUT_IS_LIST = (False,) * OUTPUT_PORT_COUNT
 
     def split_string(self, input_string, split_method, split_symbol, output_count):
         parts = []
@@ -50,5 +52,5 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "StringSplitNode": "String Split"
+    "StringSplitNode": "字符串分割"
 }
