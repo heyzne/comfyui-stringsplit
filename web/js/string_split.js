@@ -9,19 +9,37 @@ function getOutputCount(node) {
 
 function syncOutputs(node) {
 	const count = getOutputCount(node);
+	const graph = app.graph;
+	if (!graph || !node.outputs) return;
 
-	// 保存现有连接
-	const savedLinks = {};
-	if (node.outputs) {
-		for (let i = 0; i < node.outputs.length; i++) {
-			if (node.outputs[i] && node.outputs[i].links) {
-				savedLinks[i] = [...node.outputs[i].links];
+	// 保存完整的连接信息（目标节点ID + 输入槽位索引）
+	const savedConnections = [];
+	for (let i = 0; i < node.outputs.length; i++) {
+		const out = node.outputs[i];
+		if (!out || !out.links) continue;
+		for (const linkId of out.links) {
+			const link = graph.links[linkId];
+			if (link && link.target_id !== undefined) {
+				savedConnections.push({
+					sourceSlot: i,
+					targetNodeId: link.target_id,
+					targetSlot: link.target_slot,
+				});
 			}
 		}
 	}
 
-	// 清除所有现有输出
-	while (node.outputs && node.outputs.length > 0) {
+	// 先断开所有输出连接（避免 removeOutput 时报错）
+	for (let i = node.outputs.length - 1; i >= 0; i--) {
+		if (node.outputs[i] && node.outputs[i].links) {
+			for (const linkId of [...node.outputs[i].links]) {
+				graph.removeLink(linkId);
+			}
+		}
+	}
+
+	// 清除所有输出
+	while (node.outputs.length > 0) {
 		node.removeOutput(0);
 	}
 
@@ -30,15 +48,23 @@ function syncOutputs(node) {
 		node.addOutput(`字符串_${i + 1}`, "STRING");
 	}
 
-	// 恢复连接（只恢复 count 范围内的）
-	if (app.graph) {
-		for (let i = 0; i < count; i++) {
-			if (savedLinks[i]) {
-				node.outputs[i].links = savedLinks[i];
+	// 恢复连接
+	for (const conn of savedConnections) {
+		if (conn.sourceSlot < count) {
+			const targetNode = graph.getNodeById(conn.targetNodeId);
+			if (targetNode) {
+				graph.connect(
+					conn.sourceSlot,
+					node.id,
+					conn.targetSlot,
+					conn.targetNodeId,
+					"STRING"
+				);
 			}
 		}
-		app.graph.setDirtyCanvas(true, true);
 	}
+
+	graph.setDirtyCanvas(true, true);
 }
 
 app.registerExtension({
