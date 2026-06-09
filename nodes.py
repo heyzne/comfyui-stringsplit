@@ -2,6 +2,8 @@ import re
 
 class StringSplitNode:
     MAX_OUTPUTS = 50
+    RETURN_TYPES = tuple(["STRING"] * MAX_OUTPUTS)
+    RETURN_NAMES = tuple([f"STRING_{i+1}" for i in range(MAX_OUTPUTS)])
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -61,6 +63,3 @@ NODE_CLASS_MAPPINGS = {
 NODE_DISPLAY_NAME_MAPPINGS = {
     "StringSplitNode": "String Split"
 }
-
-RETURN_TYPES = tuple(["STRING"] * StringSplitNode.MAX_OUTPUTS)
-RETURN_NAMES = tuple([f"STRING_{i+1}" for i in range(StringSplitNode.MAX_OUTPUTS)])
